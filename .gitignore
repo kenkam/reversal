@@ -1,0 +1,8 @@
+*.suo
+*.dotsettings
+*.user
+*.ncrunch*
+_Ncrunch_*
+obj
+bin
+packages
