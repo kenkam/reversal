@@ -38,8 +38,7 @@ namespace Reversal
             return position.X < 0 || position.X > MaximumPosition.X ||
                    position.Y < 0 || position.Y > MaximumPosition.Y;
         }
-
-
+        
         private class PiecesInLine
         {
             private readonly Board board;
@@ -58,7 +57,7 @@ namespace Reversal
             private IEnumerable<Piece> GetContiguousOppositionPieces()
             {
                 var side = piece.Side;
-                foreach (var next in GetNextContiguousPiece())
+                foreach (var next in GetContiguousPieces())
                 {
                     if (next.Side != side)
                     {
@@ -71,7 +70,7 @@ namespace Reversal
                 }
             }
 
-            private IEnumerable<Piece> GetNextContiguousPiece()
+            private IEnumerable<Piece> GetContiguousPieces()
             {
                 var nextPosition = direction.AwayFrom(piece.Position);
                 while (!board.IsOutOfBounds(nextPosition))
