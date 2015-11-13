@@ -3,6 +3,7 @@
     public enum Side
     {
         Black,
-        White
+        White,
+        None
     }
 }

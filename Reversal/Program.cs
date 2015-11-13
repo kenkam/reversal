@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Reversal
 {
@@ -15,13 +16,29 @@ namespace Reversal
             };
 
             var board = new Board(new Position(7, 7), pieces);
+            var game = new Game(board);
             var view = new BoardView(board);
             view.Print();
 
-            var piece = new Piece(new Position(2, 3), Side.Black);
-            Console.WriteLine($"Playing {piece}");
-            board.Play(piece);
-            view.Print();
+            while (true)
+            {
+                Console.WriteLine($"{game.Turn} turn: enter x,y");
+                var input = Console.ReadLine();
+                if (input == null)
+                {
+                    continue;
+                }
+
+                var tokens = input.Trim()
+                    .Split(',')
+                    .Select(x => x.Trim())
+                    .Select(int.Parse)
+                    .ToArray();
+                var position = new Position(tokens.First(), tokens.Last());
+                game.PlayPieceAt(position);
+
+                view.Print();
+            }
         }
     }
 }

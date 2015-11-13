@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DirectionTestFixture.cs" />
+    <Compile Include="GameTestFixture.cs" />
     <Compile Include="PieceTestFixture.cs" />
     <Compile Include="BoardTestFixture.cs" />
     <Compile Include="PositionTestFixture.cs" />

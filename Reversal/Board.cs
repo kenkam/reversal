@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Reversal
 {
-    public sealed class Board
+    public sealed class Board : IBoard
     {
         private readonly List<Piece> pieces;
 
@@ -17,7 +17,7 @@ namespace Reversal
         public Position MaximumPosition { get; }
 
         public IEnumerable<Piece> GetPieces() => pieces;
-
+        
         public Piece GetPiece(Position position)
         {
             return pieces.Find(x => x.Position.Equals(position));
@@ -47,6 +47,27 @@ namespace Reversal
             
             return CapturesOpponentPiecesInAnyDirection(piece);
         }
+
+        public Side WinningSide
+        {
+            get
+            {
+                var blacks = Score(Side.Black);
+                var whites = Score(Side.White);
+
+                if (blacks > whites)
+                {
+                    return Side.Black;
+                }
+                if (whites > blacks)
+                {
+                    return Side.White;
+                }
+                return Side.None;
+            }
+        }
+
+        private int Score(Side side) => GetPieces().Count(x => x.Side == side);
 
         private bool IsOccupied(Position position) => pieces.Any(x => x.Position.Equals(position));
 
