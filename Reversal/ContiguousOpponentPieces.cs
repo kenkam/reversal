@@ -5,36 +5,29 @@ namespace Reversal
 {
     internal sealed class ContiguousOpponentPieces : IContiguousOpponentPieces
     {
-        private readonly IPieceBag pieceBag;
-
-        public ContiguousOpponentPieces(IPieceBag pieceBag)
+        public bool HasCapturablePieces(IPieceBag pieceBag, IPiece startingPiece, Direction direction)
         {
-            this.pieceBag = pieceBag;
+            return GetCapturablePieces(pieceBag, startingPiece, direction).Any();
         }
 
-        public bool HasCapturablePieces(IPiece startingPiece, Direction direction)
+        public void Capture(IPieceBag pieceBag, IPiece startingPiece, Direction direction)
         {
-            return GetCapturablePieces(startingPiece, direction).Any();
-        }
-
-        public void Capture(IPiece startingPiece, Direction direction)
-        {
-            foreach (var piece in GetCapturablePieces(startingPiece, direction))
+            foreach (var piece in GetCapturablePieces(pieceBag, startingPiece, direction))
             {
                 piece.Flip();
             }
         }
 
-        private IEnumerable<IPiece> GetCapturablePieces(IPiece startingPiece, Direction direction)
+        private IEnumerable<IPiece> GetCapturablePieces(IPieceBag pieceBag, IPiece startingPiece, Direction direction)
         {
-            var opponents = GetContiguousOpponentPieces(startingPiece, direction)
+            var opponents = GetContiguousOpponentPieces(pieceBag, startingPiece, direction)
                 .ToArray();
             if (!opponents.Any())
             {
                 return Enumerable.Empty<IPiece>();
             }
 
-            var nextPiece = GetNextPieceFrom(opponents.Last(), direction);
+            var nextPiece = GetNextPieceFrom(pieceBag, opponents.Last(), direction);
             if (nextPiece == null || nextPiece.Side != startingPiece.Side)
             {
                 return Enumerable.Empty<IPiece>();
@@ -43,9 +36,9 @@ namespace Reversal
             return opponents;
         } 
 
-        private IEnumerable<IPiece> GetContiguousOpponentPieces(IPiece startingPiece, Direction direction)
+        private IEnumerable<IPiece> GetContiguousOpponentPieces(IPieceBag pieceBag, IPiece startingPiece, Direction direction)
         {
-            var piece = GetNextPieceFrom(startingPiece, direction);
+            var piece = GetNextPieceFrom(pieceBag, startingPiece, direction);
             while (piece != null)
             {
                 if (piece.Side == startingPiece.Side)
@@ -54,11 +47,11 @@ namespace Reversal
                 }
 
                 yield return piece;
-                piece = GetNextPieceFrom(piece, direction);
+                piece = GetNextPieceFrom(pieceBag, piece, direction);
             }
         }
 
-        private IPiece GetNextPieceFrom(IPiece piece, Direction direction)
+        private IPiece GetNextPieceFrom(IPieceBag pieceBag, IPiece piece, Direction direction)
         {
             return pieceBag.GetPiece(direction.AwayFrom(piece.Position));
         }

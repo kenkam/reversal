@@ -12,11 +12,11 @@ namespace Reversal
         public Board(
             Position maximum, 
             IPieceBag pieceBag,
-            IContiguousOpponentPiecesFactory factory)
+            IContiguousOpponentPieces contiguousOpponentPieces)
         {
             MaximumPosition = maximum;
             this.pieceBag = pieceBag;
-            contiguousOpponentPieces = factory.Create(pieceBag);
+            this.contiguousOpponentPieces = contiguousOpponentPieces;
         }
 
         public Position MaximumPosition { get; }
@@ -35,7 +35,7 @@ namespace Reversal
             pieceBag.Add(piece);
             foreach (var direction in Direction.All())
             {
-                contiguousOpponentPieces.Capture(piece, direction);
+                contiguousOpponentPieces.Capture(pieceBag, piece, direction);
             }
         }
 
@@ -81,7 +81,7 @@ namespace Reversal
         private bool CapturesOpponentPiecesInAnyDirection(IPiece piece)
         {
             return Direction.All()
-                .Any(direction => contiguousOpponentPieces.HasCapturablePieces(piece, direction));
+                .Any(direction => contiguousOpponentPieces.HasCapturablePieces(pieceBag, piece, direction));
         }
     }
 }

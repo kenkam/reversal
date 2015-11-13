@@ -46,11 +46,9 @@
     <Compile Include="Board.cs" />
     <Compile Include="BoardView.cs" />
     <Compile Include="Direction.cs" />
-    <Compile Include="ContiguousOpponentPiecesFactory.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="IBoard.cs" />
     <Compile Include="IContiguousOpponentPieces.cs" />
-    <Compile Include="IContiguousOpponentPiecesFactory.cs" />
     <Compile Include="IPiece.cs" />
     <Compile Include="IPieceBag.cs" />
     <Compile Include="Piece.cs" />

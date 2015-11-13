@@ -2,7 +2,7 @@
 {
     public interface IContiguousOpponentPieces
     {
-        bool HasCapturablePieces(IPiece startingPiece, Direction direction);
-        void Capture(IPiece startingPiece, Direction direction);
+        bool HasCapturablePieces(IPieceBag pieceBag, IPiece startingPiece, Direction direction);
+        void Capture(IPieceBag pieceBag, IPiece startingPiece, Direction direction);
     }
 }

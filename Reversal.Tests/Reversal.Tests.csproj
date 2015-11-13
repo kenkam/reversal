@@ -53,7 +53,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DirectionTestFixture.cs" />
-    <Compile Include="ContiguousOpponentPiecesFactoryTestFixture.cs" />
     <Compile Include="GameTestFixture.cs" />
     <Compile Include="PieceBagTestFixture.cs" />
     <Compile Include="ContiguousOpponentPiecesTestFixture.cs" />

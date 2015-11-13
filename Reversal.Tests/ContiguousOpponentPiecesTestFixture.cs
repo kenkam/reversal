@@ -52,7 +52,7 @@ namespace Reversal.Tests
             var subject = fixture.Create<ContiguousOpponentPieces>();
 
             // Act
-            var result = subject.HasCapturablePieces(startingPiece, directionMock.Object);
+            var result = subject.HasCapturablePieces(pieceBagMock.Object, startingPiece, directionMock.Object);
 
             // Assert
             Assert.That(result, Is.True);
@@ -80,7 +80,7 @@ namespace Reversal.Tests
             var subject = fixture.Create<ContiguousOpponentPieces>();
 
             // Act
-            var result = subject.HasCapturablePieces(startingPiece, directionMock.Object);
+            var result = subject.HasCapturablePieces(pieceBagMock.Object, startingPiece, directionMock.Object);
 
             // Assert
             Assert.That(result, Is.False);
@@ -99,14 +99,14 @@ namespace Reversal.Tests
             var subject = fixture.Create<ContiguousOpponentPieces>();
 
             // Act
-            var result = subject.HasCapturablePieces(startingPiece, directionMock.Object);
+            var result = subject.HasCapturablePieces(pieceBagMock.Object, startingPiece, directionMock.Object);
 
             // Assert
             Assert.That(result, Is.False);
         }
 
         [Test]
-        public void CapturePieces_WhenEnclosureExists_ShouldFlipPieces()
+        public void Capture_WhenEnclosureExists_ShouldFlipPieces()
         {
             // Arrange
             var pieces = fixture.Build<FakePiece>()
@@ -130,7 +130,7 @@ namespace Reversal.Tests
             var subject = fixture.Create<ContiguousOpponentPieces>();
 
             // Act
-            subject.Capture(startingPiece, directionMock.Object);
+            subject.Capture(pieceBagMock.Object, startingPiece, directionMock.Object);
 
             // Assert
             Assert.That(pieces.All(x => x.Flipped), Is.True);
