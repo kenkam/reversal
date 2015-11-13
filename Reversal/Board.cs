@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Reversal
@@ -20,6 +21,20 @@ namespace Reversal
         public Piece GetPiece(Position position)
         {
             return pieces.Find(x => x.Position.Equals(position));
+        }
+
+        public void Play(Piece piece)
+        {
+            if (!CanPlay(piece))
+            {
+                throw new InvalidOperationException($"Invalid move for {piece}");
+            }
+
+            foreach (var direction in Direction.All())
+            {
+                var line = new PiecesInLine(this, piece, direction);
+                line.FlipOpponents();
+            }
         }
 
         public bool CanPlay(Piece piece)
@@ -52,9 +67,17 @@ namespace Reversal
                 this.direction = direction;
             }
 
-            public bool IsValid() => GetContiguousOppositionPieces().Any();
+            public bool IsValid() => GetContiguousOpponentPieces().Any();
 
-            private IEnumerable<Piece> GetContiguousOppositionPieces()
+            public void FlipOpponents()
+            {
+                foreach (var opponent in GetContiguousOpponentPieces())
+                {
+                    opponent.Flip();
+                }
+            }
+
+            private IEnumerable<Piece> GetContiguousOpponentPieces()
             {
                 var side = piece.Side;
                 foreach (var next in GetContiguousPieces())

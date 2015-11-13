@@ -1,4 +1,6 @@
-﻿namespace Reversal
+﻿using System;
+
+namespace Reversal
 {
     class Program
     {
@@ -15,6 +17,8 @@
             var board = new Board(new Position(7, 7), pieces);
             var view = new BoardView(board);
             view.Print();
+
+            Console.WriteLine(new Piece(new Position(4, 4), Side.White));
         }
     }
 }

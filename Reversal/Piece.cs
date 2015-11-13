@@ -9,7 +9,14 @@
         }
 
         public Position Position { get; }
-        public Side Side { get; }
+        public Side Side { get; private set; }
+
+        public void Flip() => Side = Side == Side.Black ? Side.White : Side.Black;
+
+        public override string ToString()
+        {
+            return $"{Side} at {Position}";
+        }
 
         private bool Equals(Piece other)
         {
@@ -26,10 +33,7 @@
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return (Position.GetHashCode()*397) ^ (int) Side;
-            }
+            unchecked { return Position.GetHashCode()*397; }
         }
     }
 }

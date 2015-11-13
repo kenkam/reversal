@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Ploeh.AutoFixture;
 using Ploeh.AutoFixture.AutoMoq;
 
@@ -44,6 +43,21 @@ namespace Reversal.Tests
 
             // Assert
             Assert.That(result, Is.EqualTo(side));
+        }
+
+        [TestCase(Side.Black, Side.White)]
+        [TestCase(Side.White, Side.Black)]
+        public void Flip_WhenCalled_ShouldChangeSides(Side start, Side expected)
+        {
+            // Arrange
+            fixture.Inject(start);
+            var subject = fixture.Create<Piece>();
+
+            // Act
+            subject.Flip();
+
+            // Assert
+            Assert.That(subject.Side, Is.EqualTo(expected));
         }
 
         [Test]
