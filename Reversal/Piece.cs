@@ -1,4 +1,6 @@
-﻿namespace Reversal
+﻿using System;
+
+namespace Reversal
 {
     public sealed class Piece : IPiece
     {
@@ -16,24 +18,6 @@
         public override string ToString()
         {
             return $"{Side} at {Position}";
-        }
-
-        private bool Equals(Piece other)
-        {
-            return Position.Equals(other.Position) && 
-                   Side == other.Side;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj is Piece && Equals((Piece) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked { return Position.GetHashCode()*397; }
         }
     }
 }
