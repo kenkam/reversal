@@ -3,29 +3,29 @@ using System.Linq;
 
 namespace Reversal
 {
-    internal sealed class EnclosedOpponentPieces : IEnclosedOpponentPieces
+    internal sealed class ContiguousOpponentPieces : IContiguousOpponentPieces
     {
         private readonly IPieceBag pieceBag;
 
-        public EnclosedOpponentPieces(IPieceBag pieceBag)
+        public ContiguousOpponentPieces(IPieceBag pieceBag)
         {
             this.pieceBag = pieceBag;
         }
 
-        public bool HasEnclosedPieces(IPiece startingPiece, Direction direction)
+        public bool HasCapturablePieces(IPiece startingPiece, Direction direction)
         {
-            return GetEnclosedPieces(startingPiece, direction).Any();
+            return GetCapturablePieces(startingPiece, direction).Any();
         }
 
-        public void FlipEnclosedPieces(IPiece startingPiece, Direction direction)
+        public void Capture(IPiece startingPiece, Direction direction)
         {
-            foreach (var piece in GetEnclosedPieces(startingPiece, direction))
+            foreach (var piece in GetCapturablePieces(startingPiece, direction))
             {
                 piece.Flip();
             }
         }
 
-        private IEnumerable<IPiece> GetEnclosedPieces(IPiece startingPiece, Direction direction)
+        private IEnumerable<IPiece> GetCapturablePieces(IPiece startingPiece, Direction direction)
         {
             var opponents = GetContiguousOpponentPieces(startingPiece, direction)
                 .ToArray();

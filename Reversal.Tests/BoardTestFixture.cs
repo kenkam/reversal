@@ -3,6 +3,7 @@ using Ploeh.AutoFixture;
 using Ploeh.AutoFixture.AutoMoq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Moq;
 
@@ -67,7 +68,7 @@ namespace Reversal.Tests
             private IFixture fixture;
             private Position maximum;
             private Mock<IPieceBag> pieceBagMock;
-            private Mock<IEnclosedOpponentPieces> enclosedOpponentPiecesMock;
+            private Mock<IContiguousOpponentPieces> contiguousOpponentPiecesMock;
             private IPiece occupyingPiece;
             private FakePiece piece;
 
@@ -78,7 +79,7 @@ namespace Reversal.Tests
                     .Customize(new AutoMoqCustomization());
                 maximum = fixture.Create<Position>();
                 pieceBagMock = fixture.Freeze<Mock<IPieceBag>>();
-                var enclosedOpponentPiecesFactoryMock = fixture.Freeze<Mock<IEnclosedOpponentPiecesFactory>>();
+                var contiguousOpponentPiecesFactoryMock = fixture.Freeze<Mock<IContiguousOpponentPiecesFactory>>();
 
                 piece = fixture.Build<FakePiece>()
                     .With(x => x.Position, new Position(maximum.X - 1, maximum.Y - 1))
@@ -88,11 +89,11 @@ namespace Reversal.Tests
                 pieceBagMock.Setup(x => x.GetPiece(piece.Position))
                     .Returns(() => occupyingPiece);
 
-                enclosedOpponentPiecesMock = fixture.Create<Mock<IEnclosedOpponentPieces>>();
-                enclosedOpponentPiecesFactoryMock.Setup(x => x.Create(pieceBagMock.Object))
-                    .Returns(() => enclosedOpponentPiecesMock.Object);
+                contiguousOpponentPiecesMock = fixture.Create<Mock<IContiguousOpponentPieces>>();
+                contiguousOpponentPiecesFactoryMock.Setup(x => x.Create(pieceBagMock.Object))
+                    .Returns(() => contiguousOpponentPiecesMock.Object);
 
-                fixture.Register(() => new Board(maximum, pieceBagMock.Object, enclosedOpponentPiecesFactoryMock.Object));
+                fixture.Register(() => new Board(maximum, pieceBagMock.Object, contiguousOpponentPiecesFactoryMock.Object));
             }
 
             [TestCaseSource(typeof(Direction), nameof(Direction.All))]
@@ -100,8 +101,8 @@ namespace Reversal.Tests
             {
                 // Arrange
                 var subject = fixture.Create<Board>();
-                enclosedOpponentPiecesMock.Setup(
-                    x => x.HasEnclosedPieces(
+                contiguousOpponentPiecesMock.Setup(
+                    x => x.HasCapturablePieces(
                         piece,
                         It.Is<Direction>(r => r.GetType() == direction.GetType())))
                     .Returns(true);
@@ -110,8 +111,8 @@ namespace Reversal.Tests
                 subject.Play(piece);
 
                 // Assert
-                enclosedOpponentPiecesMock.Verify(
-                    x => x.FlipEnclosedPieces(
+                contiguousOpponentPiecesMock.Verify(
+                    x => x.Capture(
                         piece, 
                         It.Is<Direction>(r => r.GetType() == direction.GetType())),
                     Times.Once);
@@ -122,8 +123,8 @@ namespace Reversal.Tests
             {
                 // Arrange
                 var subject = fixture.Create<Board>();
-                enclosedOpponentPiecesMock.Setup(
-                    x => x.HasEnclosedPieces(
+                contiguousOpponentPiecesMock.Setup(
+                    x => x.HasCapturablePieces(
                         piece,
                         It.IsAny<Direction>()))
                     .Returns(true);
@@ -132,8 +133,8 @@ namespace Reversal.Tests
                 subject.Play(piece);
 
                 // Assert
-                enclosedOpponentPiecesMock.Verify(
-                    x => x.FlipEnclosedPieces(
+                contiguousOpponentPiecesMock.Verify(
+                    x => x.Capture(
                         piece,
                         It.IsAny<Direction>()),
                     Times.Exactly(Direction.All().Count()));
@@ -143,7 +144,7 @@ namespace Reversal.Tests
             public void Play_WhenNotEnclosingOpponentPieces_ShouldThrowInvalidOperationException()
             {
                 // Arrange
-                enclosedOpponentPiecesMock.Setup(x => x.HasEnclosedPieces(piece, It.IsAny<Direction>()))
+                contiguousOpponentPiecesMock.Setup(x => x.HasCapturablePieces(piece, It.IsAny<Direction>()))
                     .Returns(false);
                 var subject = fixture.Create<Board>();
 
@@ -192,7 +193,7 @@ namespace Reversal.Tests
             private IFixture fixture;
             private Position maximum;
             private Mock<IPieceBag> pieceBagMock;
-            private Mock<IEnclosedOpponentPieces> enclosedOpponentPiecesMock;
+            private Mock<IContiguousOpponentPieces> contiguousOpponentPiecesMock;
             private IPiece occupyingPiece;
             private FakePiece piece;
 
@@ -203,7 +204,7 @@ namespace Reversal.Tests
                     .Customize(new AutoMoqCustomization());
                 maximum = fixture.Create<Position>();
                 pieceBagMock = fixture.Freeze<Mock<IPieceBag>>();
-                var enclosedOpponentPiecesFactoryMock = fixture.Freeze<Mock<IEnclosedOpponentPiecesFactory>>();
+                var contiguousOpponentPiecesFactoryMock = fixture.Freeze<Mock<IContiguousOpponentPiecesFactory>>();
 
                 piece = fixture.Build<FakePiece>()
                     .With(x => x.Position, new Position(maximum.X - 1, maximum.Y - 1))
@@ -213,11 +214,11 @@ namespace Reversal.Tests
                 pieceBagMock.Setup(x => x.GetPiece(piece.Position))
                     .Returns(() => occupyingPiece);
 
-                enclosedOpponentPiecesMock = fixture.Create<Mock<IEnclosedOpponentPieces>>();
-                enclosedOpponentPiecesFactoryMock.Setup(x => x.Create(pieceBagMock.Object))
-                    .Returns(() => enclosedOpponentPiecesMock.Object);
+                contiguousOpponentPiecesMock = fixture.Create<Mock<IContiguousOpponentPieces>>();
+                contiguousOpponentPiecesFactoryMock.Setup(x => x.Create(pieceBagMock.Object))
+                    .Returns(() => contiguousOpponentPiecesMock.Object);
 
-                fixture.Register(() => new Board(maximum, pieceBagMock.Object, enclosedOpponentPiecesFactoryMock.Object));
+                fixture.Register(() => new Board(maximum, pieceBagMock.Object, contiguousOpponentPiecesFactoryMock.Object));
             }
 
             [TestCaseSource(typeof(Direction), nameof(Direction.All))]
@@ -225,8 +226,8 @@ namespace Reversal.Tests
             {
                 // Arrange
                 var subject = fixture.Create<Board>();
-                enclosedOpponentPiecesMock.Setup(
-                    x => x.HasEnclosedPieces(
+                contiguousOpponentPiecesMock.Setup(
+                    x => x.HasCapturablePieces(
                         piece, 
                         It.Is<Direction>(r => r.GetType() == direction.GetType())))
                     .Returns(true);
@@ -242,7 +243,7 @@ namespace Reversal.Tests
             public void CanPlay_WhenNotEnclosingOpponentPieces_ShouldReturnFalse()
             {
                 // Arrange
-                enclosedOpponentPiecesMock.Setup(x => x.HasEnclosedPieces(piece, It.IsAny<Direction>()))
+                contiguousOpponentPiecesMock.Setup(x => x.HasCapturablePieces(piece, It.IsAny<Direction>()))
                     .Returns(false);
                 var subject = fixture.Create<Board>();
 
@@ -334,6 +335,7 @@ namespace Reversal.Tests
             }
         }
 
+        [ExcludeFromCodeCoverage]
         internal class FakePiece : IPiece
         {
             public Position Position { get; set; }

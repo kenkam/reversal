@@ -8,7 +8,7 @@ using System.Linq;
 namespace Reversal.Tests
 {
     [TestFixture]
-    public class EnclosedOpponentPiecesTestFixture
+    public class ContiguousOpponentPiecesTestFixture
     {
         private IFixture fixture;
         private Mock<IPieceBag> pieceBagMock;
@@ -28,7 +28,7 @@ namespace Reversal.Tests
         }
 
         [Test]
-        public void HasEnclosedPieces_WhenEnclosureExists_ShouldReturnTrue()
+        public void HasCapturablePieces_WhenEnclosureExists_ShouldReturnTrue()
         {
             // Arrange
             var pieces = fixture.Build<FakePiece>()
@@ -49,17 +49,17 @@ namespace Reversal.Tests
                 .Create();
             SetupPiece(pieces.Last().Position, sameSidePiece);
 
-            var subject = fixture.Create<EnclosedOpponentPieces>();
+            var subject = fixture.Create<ContiguousOpponentPieces>();
 
             // Act
-            var result = subject.HasEnclosedPieces(startingPiece, directionMock.Object);
+            var result = subject.HasCapturablePieces(startingPiece, directionMock.Object);
 
             // Assert
             Assert.That(result, Is.True);
         }
 
         [Test]
-        public void HasEnclosedPieces_WhenThereIsNoSameSidePieceEnclosingOpponents_ShouldReturnFalse()
+        public void HasCapturablePieces_WhenThereIsNoSameSidePieceEnclosingOpponents_ShouldReturnFalse()
         {
             // Arrange
             var pieces = fixture.Build<FakePiece>()
@@ -77,17 +77,17 @@ namespace Reversal.Tests
 
             SetupPiece(pieces.Last().Position, null);
 
-            var subject = fixture.Create<EnclosedOpponentPieces>();
+            var subject = fixture.Create<ContiguousOpponentPieces>();
 
             // Act
-            var result = subject.HasEnclosedPieces(startingPiece, directionMock.Object);
+            var result = subject.HasCapturablePieces(startingPiece, directionMock.Object);
 
             // Assert
             Assert.That(result, Is.False);
         }
 
         [Test]
-        public void HasEnclosedPieces_WhenEnclosureDoesNotExist_ShouldReturnFalse()
+        public void HasCapturablePieces_WhenEnclosureDoesNotExist_ShouldReturnFalse()
         {
             // Arrange
             var sameSidePiece = fixture.Build<FakePiece>()
@@ -96,17 +96,17 @@ namespace Reversal.Tests
 
             SetupPiece(startingPiece.Position, sameSidePiece);
 
-            var subject = fixture.Create<EnclosedOpponentPieces>();
+            var subject = fixture.Create<ContiguousOpponentPieces>();
 
             // Act
-            var result = subject.HasEnclosedPieces(startingPiece, directionMock.Object);
+            var result = subject.HasCapturablePieces(startingPiece, directionMock.Object);
 
             // Assert
             Assert.That(result, Is.False);
         }
 
         [Test]
-        public void FlipEnclosedPieces_WhenEnclosureExists_ShouldFlipEnclosedPieces()
+        public void CapturePieces_WhenEnclosureExists_ShouldFlipPieces()
         {
             // Arrange
             var pieces = fixture.Build<FakePiece>()
@@ -125,13 +125,12 @@ namespace Reversal.Tests
             var sameSidePiece = fixture.Build<FakePiece>()
                 .With(x => x.Side, startingPiece.Side)
                 .Create();
-            SetupPiece(pieces.Last()
-                .Position, sameSidePiece);
+            SetupPiece(pieces.Last().Position, sameSidePiece);
 
-            var subject = fixture.Create<EnclosedOpponentPieces>();
+            var subject = fixture.Create<ContiguousOpponentPieces>();
 
             // Act
-            subject.FlipEnclosedPieces(startingPiece, directionMock.Object);
+            subject.Capture(startingPiece, directionMock.Object);
 
             // Assert
             Assert.That(pieces.All(x => x.Flipped), Is.True);

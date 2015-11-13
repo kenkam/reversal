@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Reversal
 {
+    [ExcludeFromCodeCoverage]
     class Program
     {
         static void Main(string[] args)
@@ -16,7 +18,7 @@ namespace Reversal
             };
             var pieceBag = new PieceBag(pieces);
 
-            var board = new Board(new Position(7, 7), pieceBag, new EnclosedOpponentPiecesFactory());
+            var board = new Board(new Position(7, 7), pieceBag, new ContiguousOpponentPiecesFactory());
             var game = new Game(board);
             var view = new BoardView(board);
             view.Print();

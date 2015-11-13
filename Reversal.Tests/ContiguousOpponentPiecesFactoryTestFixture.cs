@@ -5,7 +5,7 @@ using Ploeh.AutoFixture.AutoMoq;
 namespace Reversal.Tests
 {
     [TestFixture]
-    public class EnclosedOpponentPiecesFactoryTestFixture
+    public class ContiguousOpponentPiecesFactoryTestFixture
     {
         private IFixture fixture;
 
@@ -17,17 +17,17 @@ namespace Reversal.Tests
         }
 
         [Test]
-        public void Create_WhenCalled_ShouldReturnEnclosedOpponentPieces()
+        public void Create_WhenCalled_ShouldReturnContiguousOpponentPieces()
         {
             // Arrange
             var pieceBag = fixture.Create<IPieceBag>();
-            var subject = fixture.Create<EnclosedOpponentPiecesFactory>();
+            var subject = fixture.Create<ContiguousOpponentPiecesFactory>();
 
             // Act
             var result = subject.Create(pieceBag);
 
             // Assert
-            Assert.That(result, Is.TypeOf<EnclosedOpponentPieces>());
+            Assert.That(result, Is.TypeOf<ContiguousOpponentPieces>());
         }
     }
 }
