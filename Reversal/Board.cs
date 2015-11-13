@@ -40,19 +40,26 @@ namespace Reversal
 
         public bool CanPlay(Piece piece)
         {
-            if (IsOutOfBounds(piece.Position))
+            if (IsOutOfBounds(piece.Position) || IsOccupied(piece.Position))
             {
                 return false;
             }
-
-            return Direction.All()
-                .Any(direction => new PiecesInLine(this, piece, direction).IsValid());
+            
+            return CapturesOpponentPiecesInAnyDirection(piece);
         }
+
+        private bool IsOccupied(Position position) => pieces.Any(x => x.Position.Equals(position));
 
         private bool IsOutOfBounds(Position position)
         {
             return position.X < 0 || position.X > MaximumPosition.X ||
                    position.Y < 0 || position.Y > MaximumPosition.Y;
+        }
+
+        private bool CapturesOpponentPiecesInAnyDirection(Piece piece)
+        {
+            return Direction.All()
+                .Any(direction => new PiecesInLine(this, piece, direction).CapturesOpponentPieces());
         }
         
         private class PiecesInLine
@@ -68,7 +75,7 @@ namespace Reversal
                 this.direction = direction;
             }
 
-            public bool IsValid() => GetContiguousOpponentPieces().Any();
+            public bool CapturesOpponentPieces() => GetContiguousOpponentPieces().Any();
 
             public void FlipOpponents()
             {

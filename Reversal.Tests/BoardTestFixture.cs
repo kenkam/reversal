@@ -291,6 +291,25 @@ namespace Reversal.Tests
                 Assert.That(result, Is.False);
             }
 
+            [Test]
+            public void CanPlay_WhenPieceExistsOnPosition_ShouldReturnFalse()
+            {
+                // Arrange
+                var white1 = new Piece(new Position(3, 5), Side.White);
+                var black = new Piece(new Position(3, 4), Side.Black);
+                var white2 = new Piece(new Position(3, 3), Side.White);
+                Fixture.Register<IEnumerable<Piece>>(() => new[] { white1, white2, black });
+
+                var piece = new Piece(new Position(3, 3), Side.White);
+                var subject = Fixture.Create<Board>();
+
+                // Act
+                var result = subject.CanPlay(piece);
+
+                // Assert
+                Assert.That(result, Is.False);
+            }
+
             [TestCase(8, 7)]
             [TestCase(7, 8)]
             [TestCase(8, 8)]
