@@ -131,7 +131,7 @@ namespace Reversal.Tests
             }
 
             [Test]
-            public void Play_WhenHasMultiplePiecesInALine_ShouldFlipOnlyContiguousOpponentPieces()
+            public void Play_WhenMultiplePiecesInALine_ShouldFlipOnlyContiguousOpponentPieces()
             {
                 // Arrange
                 var opponent1 = new Piece(new Position(2, 1), Side.Black);
@@ -159,6 +159,24 @@ namespace Reversal.Tests
                 // Assert
                 Assert.That(expectedFlippedPieces.All(x => x.Side == Side.White), Is.True);
                 Assert.That(safeOpponent.Side, Is.EqualTo(Side.Black));
+            }
+
+            [Test]
+            public void Play_WhenPieceIsPlayed_ShouldAddPieceToBoard()
+            {
+                // Arrange
+                var white = new Piece(new Position(3, 5), Side.White);
+                var opponent = new Piece(new Position(4, 4), Side.Black);
+                Fixture.Register<IEnumerable<Piece>>(() => new[] { white, opponent });
+
+                var piece = new Piece(new Position(3, 3), Side.White);
+                var subject = Fixture.Create<Board>();
+
+                // Act
+                subject.Play(piece);
+
+                // Assert
+                Assert.That(subject.GetPiece(piece.Position), Is.SameAs(piece));
             }
         }
 

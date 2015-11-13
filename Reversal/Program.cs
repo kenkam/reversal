@@ -18,7 +18,10 @@ namespace Reversal
             var view = new BoardView(board);
             view.Print();
 
-            Console.WriteLine(new Piece(new Position(4, 4), Side.White));
+            var piece = new Piece(new Position(2, 3), Side.Black);
+            Console.WriteLine($"Playing {piece}");
+            board.Play(piece);
+            view.Print();
         }
     }
 }

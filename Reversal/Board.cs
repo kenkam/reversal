@@ -30,6 +30,7 @@ namespace Reversal
                 throw new InvalidOperationException($"Invalid move for {piece}");
             }
 
+            pieces.Add(piece);
             foreach (var direction in Direction.All())
             {
                 var line = new PiecesInLine(this, piece, direction);
