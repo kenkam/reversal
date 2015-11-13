@@ -8,7 +8,7 @@ using System.Linq;
 namespace Reversal.Tests
 {
     [TestFixture]
-    public class ContiguousOpponentPiecesTestFixture
+    public class EnclosedOpponentPiecesTestFixture
     {
         private IFixture fixture;
         private Mock<IPieceBag> pieceBagMock;

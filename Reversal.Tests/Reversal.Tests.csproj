@@ -56,7 +56,7 @@
     <Compile Include="EnclosedOpponentPiecesFactoryTestFixture.cs" />
     <Compile Include="GameTestFixture.cs" />
     <Compile Include="PieceBagTestFixture.cs" />
-    <Compile Include="ContiguousOpponentPiecesTestFixture.cs" />
+    <Compile Include="EnclosedOpponentPiecesTestFixture.cs" />
     <Compile Include="PieceTestFixture.cs" />
     <Compile Include="BoardTestFixture.cs" />
     <Compile Include="PositionTestFixture.cs" />
