@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Reversal
 {
@@ -25,7 +24,7 @@ namespace Reversal
                         ? "." 
                         : piece.Side == Side.Black
                             ? "B"
-                            : "S";
+                            : "W";
                     Console.Write(letter);
                 }
                 Console.WriteLine();

@@ -14,8 +14,9 @@ namespace Reversal
                 new Piece(new Position(3, 3), Side.White),
                 new Piece(new Position(4, 4), Side.White)
             };
+            var pieceBag = new PieceBag(pieces);
 
-            var board = new Board(new Position(7, 7), pieces);
+            var board = new Board(new Position(7, 7), pieceBag, new EnclosedOpponentPiecesFactory());
             var game = new Game(board);
             var view = new BoardView(board);
             view.Print();

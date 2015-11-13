@@ -1,6 +1,6 @@
 ﻿namespace Reversal
 {
-    public sealed class Piece
+    public sealed class Piece : IPiece
     {
         public Piece(Position position, Side side)
         {

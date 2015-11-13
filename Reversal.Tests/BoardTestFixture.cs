@@ -4,6 +4,7 @@ using Ploeh.AutoFixture.AutoMoq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Moq;
 
 namespace Reversal.Tests
 {
@@ -11,34 +12,38 @@ namespace Reversal.Tests
     public class BoardTestFixture
     {
         [Test]
-        public void GetPieces_WhenCalled_ShouldReturnPieces()
+        public void GetPieces_WhenCalled_ShouldReturnPieceBag()
         {
             // Arrange
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
-            var pieces = fixture.Freeze<IEnumerable<Piece>>();
+            var pieceBag = fixture.Freeze<IPieceBag>();
             var subject = fixture.Create<Board>();
 
             // Act
             var result = subject.GetPieces();
 
             // Assert
-            Assert.That(result, Is.EquivalentTo(pieces));
+            Assert.That(result, Is.SameAs(pieceBag));
         }
 
         [Test]
-        public void GetPiece_WhenPieceExists_ShouldReturnPiece()
+        public void GetPiece_WhenCalled_ShouldDelegateToPieceBag()
         {
             // Arrange
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
-            var pieces = fixture.Freeze<IEnumerable<Piece>>()
-                .ToArray();
+            var position = fixture.Create<Position>();
+
+            var pieceBagMock = fixture.Freeze<Mock<IPieceBag>>();
+            var piece = fixture.Create<IPiece>();
+            pieceBagMock.Setup(x => x.GetPiece(position))
+                .Returns(piece);
             var subject = fixture.Create<Board>();
 
             // Act
-            var result = subject.GetPiece(pieces.First().Position);
+            var result = subject.GetPiece(position);
 
             // Assert
-            Assert.That(result, Is.SameAs(pieces.First()));
+            Assert.That(result, Is.SameAs(piece));
         }
 
         [Test]
@@ -60,22 +65,86 @@ namespace Reversal.Tests
         public class PlayTestFixture
         {
             private IFixture fixture;
+            private Position maximum;
+            private Mock<IPieceBag> pieceBagMock;
+            private Mock<IEnclosedOpponentPieces> enclosedOpponentPiecesMock;
+            private IPiece occupyingPiece;
+            private FakePiece piece;
 
             [SetUp]
-            public void Setup()
+            public void SetUp()
             {
                 fixture = new Fixture()
                     .Customize(new AutoMoqCustomization());
+                maximum = fixture.Create<Position>();
+                pieceBagMock = fixture.Freeze<Mock<IPieceBag>>();
+                var enclosedOpponentPiecesFactoryMock = fixture.Freeze<Mock<IEnclosedOpponentPiecesFactory>>();
+
+                piece = fixture.Build<FakePiece>()
+                    .With(x => x.Position, new Position(maximum.X - 1, maximum.Y - 1))
+                    .Create();
+
+                occupyingPiece = null;
+                pieceBagMock.Setup(x => x.GetPiece(piece.Position))
+                    .Returns(() => occupyingPiece);
+
+                enclosedOpponentPiecesMock = fixture.Create<Mock<IEnclosedOpponentPieces>>();
+                enclosedOpponentPiecesFactoryMock.Setup(x => x.Create(pieceBagMock.Object))
+                    .Returns(() => enclosedOpponentPiecesMock.Object);
+
+                fixture.Register(() => new Board(maximum, pieceBagMock.Object, enclosedOpponentPiecesFactoryMock.Object));
+            }
+
+            [TestCaseSource(typeof(Direction), nameof(Direction.All))]
+            public void Play_WhenEnclosingOpponentPieces_ShouldFlipEnclosingOpponentPieces(Direction direction)
+            {
+                // Arrange
+                var subject = fixture.Create<Board>();
+                enclosedOpponentPiecesMock.Setup(
+                    x => x.HasEnclosedPieces(
+                        piece,
+                        It.Is<Direction>(r => r.GetType() == direction.GetType())))
+                    .Returns(true);
+
+                // Act
+                subject.Play(piece);
+
+                // Assert
+                enclosedOpponentPiecesMock.Verify(
+                    x => x.FlipEnclosedPieces(
+                        piece, 
+                        It.Is<Direction>(r => r.GetType() == direction.GetType())),
+                    Times.Once);
             }
 
             [Test]
-            public void Play_WhenInvalidMove_ShouldThrowInvalidOperationException()
+            public void Play_WhenEnclosingOpponentPiecesInMultipleDirections_ShouldFlipAllEnclosingOpponentPieces()
             {
                 // Arrange
-                var white = new Piece(new Position(3, 5), Side.White);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white });
+                var subject = fixture.Create<Board>();
+                enclosedOpponentPiecesMock.Setup(
+                    x => x.HasEnclosedPieces(
+                        piece,
+                        It.IsAny<Direction>()))
+                    .Returns(true);
 
-                var piece = new Piece(new Position(4, 5), Side.White);
+                // Act
+                subject.Play(piece);
+
+                // Assert
+                enclosedOpponentPiecesMock.Verify(
+                    x => x.FlipEnclosedPieces(
+                        piece,
+                        It.IsAny<Direction>()),
+                    Times.Exactly(Direction.All().Count()));
+            }
+
+            [Test]
+            public void Play_WhenNotEnclosingOpponentPieces_ShouldThrowInvalidOperationException()
+            {
+                // Arrange
+                enclosedOpponentPiecesMock.Setup(x => x.HasEnclosedPieces(piece, It.IsAny<Direction>()))
+                    .Returns(false);
                 var subject = fixture.Create<Board>();
 
                 // Act
@@ -86,106 +155,34 @@ namespace Reversal.Tests
             }
 
             [Test]
-            public void Play_WhenCanCaptureHorizontally_ShouldFlipAllOpponentPieces()
+            public void CanPlay_WhenPositionIsOccupied_ShouldThrowInvalidOperationException()
             {
                 // Arrange
-                var white = new Piece(new Position(3, 5), Side.White);
-                var opponent = new Piece(new Position(4, 5), Side.Black);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white, opponent });
-
-                var piece = new Piece(new Position(5, 5), Side.White);
+                occupyingPiece = fixture.Create<IPiece>();
                 var subject = fixture.Create<Board>();
 
                 // Act
-                subject.Play(piece);
+                TestDelegate action = () => subject.Play(piece);
 
                 // Assert
-                Assert.That(opponent.Side, Is.EqualTo(Side.White));
+                Assert.Throws<InvalidOperationException>(action);
             }
 
             [Test]
-            public void Play_WhenCanCaptureVertically_ShouldFlipAllOpponentPieces()
+            public void CanPlay_WhenPositionIsOutOfBounds_ShouldThrowInvalidOperationException()
             {
                 // Arrange
-                var white = new Piece(new Position(3, 5), Side.White);
-                var opponent = new Piece(new Position(3, 4), Side.Black);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white, opponent });
-
-                var piece = new Piece(new Position(3, 3), Side.White);
                 var subject = fixture.Create<Board>();
+                var outOfBounds = new Position(subject.MaximumPosition.X + 1, subject.MaximumPosition.Y + 1);
+                piece = fixture.Build<FakePiece>()
+                    .With(x => x.Position, outOfBounds)
+                    .Create();
 
                 // Act
-                subject.Play(piece);
+                TestDelegate action = () => subject.Play(piece);
 
                 // Assert
-                Assert.That(opponent.Side, Is.EqualTo(Side.White));
-            }
-
-            [Test]
-            public void Play_WhenCanCaptureDiagonally_ShouldFlipAllOpponentPieces()
-            {
-                // Arrange
-                var white = new Piece(new Position(3, 5), Side.White);
-                var opponent = new Piece(new Position(4, 4), Side.Black);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white, opponent });
-
-                var piece = new Piece(new Position(5, 3), Side.White);
-                var subject = fixture.Create<Board>();
-
-                // Act
-                subject.Play(piece);
-
-                // Assert
-                Assert.That(opponent.Side, Is.EqualTo(Side.White));
-            }
-
-            [Test]
-            public void Play_WhenMultiplePiecesInALine_ShouldFlipOnlyContiguousOpponentPieces()
-            {
-                // Arrange
-                var opponent1 = new Piece(new Position(2, 1), Side.Black);
-                var opponent2 = new Piece(new Position(3, 1), Side.Black);
-                var white1 = new Piece(new Position(4, 1), Side.White);
-                var safeOpponent = new Piece(new Position(5, 1), Side.Black);
-                var white2 = new Piece(new Position(6, 1), Side.White);
-                fixture.Register<IEnumerable<Piece>>(() => new[]
-                {
-                    white1,
-                    opponent1,
-                    opponent2,
-                    safeOpponent,
-                    white2
-                });
-
-                var expectedFlippedPieces = new[] {opponent1, opponent2};
-
-                var piece = new Piece(new Position(1, 1), Side.White);
-                var subject = fixture.Create<Board>();
-
-                // Act
-                subject.Play(piece);
-
-                // Assert
-                Assert.That(expectedFlippedPieces.All(x => x.Side == Side.White), Is.True);
-                Assert.That(safeOpponent.Side, Is.EqualTo(Side.Black));
-            }
-
-            [Test]
-            public void Play_WhenPieceIsPlayed_ShouldAddPieceToBoard()
-            {
-                // Arrange
-                var white = new Piece(new Position(3, 5), Side.White);
-                var opponent = new Piece(new Position(4, 4), Side.Black);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white, opponent });
-
-                var piece = new Piece(new Position(5, 3), Side.White);
-                var subject = fixture.Create<Board>();
-
-                // Act
-                subject.Play(piece);
-
-                // Assert
-                Assert.That(subject.GetPiece(piece.Position), Is.SameAs(piece));
+                Assert.Throws<InvalidOperationException>(action);
             }
         }
 
@@ -193,63 +190,46 @@ namespace Reversal.Tests
         public class CanPlayTestFixture
         {
             private IFixture fixture;
+            private Position maximum;
+            private Mock<IPieceBag> pieceBagMock;
+            private Mock<IEnclosedOpponentPieces> enclosedOpponentPiecesMock;
+            private IPiece occupyingPiece;
+            private FakePiece piece;
 
             [SetUp]
-            public void Setup()
+            public void SetUp()
             {
                 fixture = new Fixture()
                     .Customize(new AutoMoqCustomization());
+                maximum = fixture.Create<Position>();
+                pieceBagMock = fixture.Freeze<Mock<IPieceBag>>();
+                var enclosedOpponentPiecesFactoryMock = fixture.Freeze<Mock<IEnclosedOpponentPiecesFactory>>();
+
+                piece = fixture.Build<FakePiece>()
+                    .With(x => x.Position, new Position(maximum.X - 1, maximum.Y - 1))
+                    .Create();
+
+                occupyingPiece = null;
+                pieceBagMock.Setup(x => x.GetPiece(piece.Position))
+                    .Returns(() => occupyingPiece);
+
+                enclosedOpponentPiecesMock = fixture.Create<Mock<IEnclosedOpponentPieces>>();
+                enclosedOpponentPiecesFactoryMock.Setup(x => x.Create(pieceBagMock.Object))
+                    .Returns(() => enclosedOpponentPiecesMock.Object);
+
+                fixture.Register(() => new Board(maximum, pieceBagMock.Object, enclosedOpponentPiecesFactoryMock.Object));
             }
 
-            [TestCase(5, 5, Side.White)]
-            [TestCase(2, 5, Side.Black)]
-            public void CanPlay_WhenCanCaptureHorizontally_ShouldReturnTrue(int x, int y, Side side)
+            [TestCaseSource(typeof(Direction), nameof(Direction.All))]
+            public void CanPlay_WhenEnclosingOpponentPieces_ShouldReturnTrue(Direction direction)
             {
                 // Arrange
-                var white = new Piece(new Position(3, 5), Side.White);
-                var black = new Piece(new Position(4, 5), Side.Black);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white, black });
-
-                var piece = new Piece(new Position(x, y), side);
                 var subject = fixture.Create<Board>();
-
-                // Act
-                var result = subject.CanPlay(piece);
-
-                // Assert
-                Assert.That(result, Is.True);
-            }
-
-            [TestCase(5, 5, Side.White)]
-            [TestCase(5, 2, Side.Black)]
-            public void CanPlay_WhenCanCaptureVertically_ShouldReturnTrue(int x, int y, Side side)
-            {
-                // Arrange
-                var white = new Piece(new Position(5, 3), Side.White);
-                var black = new Piece(new Position(5, 4), Side.Black);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white, black });
-
-                var piece = new Piece(new Position(x, y), side);
-                var subject = fixture.Create<Board>();
-
-                // Act
-                var result = subject.CanPlay(piece);
-
-                // Assert
-                Assert.That(result, Is.True);
-            }
-
-            [TestCase(5, 5, Side.White)]
-            [TestCase(2, 2, Side.Black)]
-            public void CanPlay_WhenCanCaptureDiagonally_ShouldReturnTrue(int x, int y, Side side)
-            {
-                // Arrange
-                var white = new Piece(new Position(3, 3), Side.White);
-                var black = new Piece(new Position(4, 4), Side.Black);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white, black });
-
-                var piece = new Piece(new Position(x, y), side);
-                var subject = fixture.Create<Board>();
+                enclosedOpponentPiecesMock.Setup(
+                    x => x.HasEnclosedPieces(
+                        piece, 
+                        It.Is<Direction>(r => r.GetType() == direction.GetType())))
+                    .Returns(true);
 
                 // Act
                 var result = subject.CanPlay(piece);
@@ -259,13 +239,11 @@ namespace Reversal.Tests
             }
 
             [Test]
-            public void CanPlay_WhenPieceDoesNotEncloseOpponentPieces_ShouldReturnFalse()
+            public void CanPlay_WhenNotEnclosingOpponentPieces_ShouldReturnFalse()
             {
                 // Arrange
-                var black = new Piece(new Position(4, 4), Side.Black);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { black });
-
-                var piece = new Piece(new Position(5, 5), Side.White);
+                enclosedOpponentPiecesMock.Setup(x => x.HasEnclosedPieces(piece, It.IsAny<Direction>()))
+                    .Returns(false);
                 var subject = fixture.Create<Board>();
 
                 // Act
@@ -276,13 +254,10 @@ namespace Reversal.Tests
             }
 
             [Test]
-            public void CanPlay_WhenCannotCaptureHorizontally_ShouldReturnFalse()
+            public void CanPlay_WhenPositionIsOccupied_ShouldReturnFalse()
             {
                 // Arrange
-                var white = new Piece(new Position(3, 5), Side.White);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white });
-
-                var piece = new Piece(new Position(4, 5), Side.White);
+                occupyingPiece = fixture.Create<IPiece>();
                 var subject = fixture.Create<Board>();
 
                 // Act
@@ -293,84 +268,14 @@ namespace Reversal.Tests
             }
 
             [Test]
-            public void CanPlay_WhenCannotCaptureVertically_ShouldReturnFalse()
+            public void CanPlay_WhenPositionIsOutOfBounds_ShouldReturnFalse()
             {
                 // Arrange
-                var white = new Piece(new Position(3, 5), Side.White);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white });
-
-                var piece = new Piece(new Position(3, 6), Side.White);
                 var subject = fixture.Create<Board>();
-
-                // Act
-                var result = subject.CanPlay(piece);
-
-                // Assert
-                Assert.That(result, Is.False);
-            }
-
-            [Test]
-            public void CanPlay_WhenCannotCaptureDiagonally_ShouldReturnFalse()
-            {
-                // Arrange
-                var white = new Piece(new Position(3, 5), Side.White);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white });
-
-                var piece = new Piece(new Position(4, 6), Side.White);
-                var subject = fixture.Create<Board>();
-
-                // Act
-                var result = subject.CanPlay(piece);
-
-                // Assert
-                Assert.That(result, Is.False);
-            }
-
-            [Test]
-            public void CanPlay_WhenPieceExistsOnPosition_ShouldReturnFalse()
-            {
-                // Arrange
-                var white1 = new Piece(new Position(3, 5), Side.White);
-                var black = new Piece(new Position(3, 4), Side.Black);
-                var white2 = new Piece(new Position(3, 3), Side.White);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { white1, white2, black });
-
-                var piece = new Piece(new Position(3, 3), Side.White);
-                var subject = fixture.Create<Board>();
-
-                // Act
-                var result = subject.CanPlay(piece);
-
-                // Assert
-                Assert.That(result, Is.False);
-            }
-
-            [TestCase(8, 7)]
-            [TestCase(7, 8)]
-            [TestCase(8, 8)]
-            public void CanPlay_WhenPieceIsOutsideBoundaryMaximum_ShouldReturnFalse(int x, int y)
-            {
-                // Arrange
-                var maximum = new Position(7, 7);
-                fixture.Register(() => maximum);
-                var piece = new Piece(new Position(x, y), Side.White);
-                var subject = fixture.Create<Board>();
-
-                // Act
-                var result = subject.CanPlay(piece);
-
-                // Assert
-                Assert.That(result, Is.False);
-            }
-
-            [TestCase(0, -1)]
-            [TestCase(-1, 0)]
-            [TestCase(-1, -1)]
-            public void CanPlay_WhenPieceIsOutsideBoundaryMinimum_ShouldReturnFalse(int x, int y)
-            {
-                // Arrange
-                var piece = new Piece(new Position(x, y), Side.White);
-                var subject = fixture.Create<Board>();
+                var outOfBounds = new Position(subject.MaximumPosition.X + 1, subject.MaximumPosition.Y + 1);
+                piece = fixture.Build<FakePiece>()
+                    .With(x => x.Position, outOfBounds)
+                    .Create();
 
                 // Act
                 var result = subject.CanPlay(piece);
@@ -379,26 +284,32 @@ namespace Reversal.Tests
                 Assert.That(result, Is.False);
             }
         }
-
+        
         [TestFixture]
         public class WinningSideTestFixture
         {
             private IFixture fixture;
+            private Mock<IPieceBag> pieceBagMock;
 
             [SetUp]
             public void SetUp()
             {
                 fixture = new Fixture()
                     .Customize(new AutoMoqCustomization());
+                pieceBagMock = fixture.Freeze<Mock<IPieceBag>>();
             }
 
-            [TestCase(Side.Black)]
             [TestCase(Side.White)]
+            [TestCase(Side.Black)]
             public void WinningSide_WhenCalled_ShouldReturnSideWithMostPieces(Side side)
             {
                 // Arrange
-                var piece = new Piece(new Position(), side);
-                fixture.Register<IEnumerable<Piece>>(() => new[] { piece });
+                var piece = fixture.Build<FakePiece>()
+                    .With(x => x.Side, side)
+                    .Create();
+                pieceBagMock.Setup(x => x.GetEnumerator())
+                    .Returns(() => new List<IPiece> {piece}.GetEnumerator());
+
                 var subject = fixture.Create<Board>();
 
                 // Act
@@ -412,7 +323,7 @@ namespace Reversal.Tests
             public void WinningSide_WhenBothSidesHaveSamePieces_ShouldReturnSideNone()
             {
                 // Arrange
-                fixture.Register(() => Enumerable.Empty<Piece>());
+                fixture.Register(() => Enumerable.Empty<IPiece>());
                 var subject = fixture.Create<Board>();
 
                 // Act
@@ -420,6 +331,16 @@ namespace Reversal.Tests
 
                 // Assert
                 Assert.That(result, Is.EqualTo(Side.None));
+            }
+        }
+
+        internal class FakePiece : IPiece
+        {
+            public Position Position { get; set; }
+            public Side Side { get; set; }
+            public void Flip()
+            {
+                throw new NotImplementedException();
             }
         }
     }

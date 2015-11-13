@@ -46,9 +46,16 @@
     <Compile Include="Board.cs" />
     <Compile Include="BoardView.cs" />
     <Compile Include="Direction.cs" />
+    <Compile Include="EnclosedOpponentPiecesFactory.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="IBoard.cs" />
+    <Compile Include="IEnclosedOpponentPieces.cs" />
+    <Compile Include="IEnclosedOpponentPiecesFactory.cs" />
+    <Compile Include="IPiece.cs" />
+    <Compile Include="IPieceBag.cs" />
     <Compile Include="Piece.cs" />
+    <Compile Include="PieceBag.cs" />
+    <Compile Include="EnclosedOpponentPieces.cs" />
     <Compile Include="Position.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -56,9 +63,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="boardascii.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
