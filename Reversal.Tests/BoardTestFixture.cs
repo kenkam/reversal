@@ -129,7 +129,7 @@ namespace Reversal.Tests
                 var opponent = new Piece(new Position(4, 4), Side.Black);
                 fixture.Register<IEnumerable<Piece>>(() => new[] { white, opponent });
 
-                var piece = new Piece(new Position(3, 3), Side.White);
+                var piece = new Piece(new Position(5, 3), Side.White);
                 var subject = fixture.Create<Board>();
 
                 // Act
@@ -178,7 +178,7 @@ namespace Reversal.Tests
                 var opponent = new Piece(new Position(4, 4), Side.Black);
                 fixture.Register<IEnumerable<Piece>>(() => new[] { white, opponent });
 
-                var piece = new Piece(new Position(3, 3), Side.White);
+                var piece = new Piece(new Position(5, 3), Side.White);
                 var subject = fixture.Create<Board>();
 
                 // Act
@@ -197,7 +197,8 @@ namespace Reversal.Tests
             [SetUp]
             public void Setup()
             {
-                fixture = new Fixture().Customize(new AutoMoqCustomization());
+                fixture = new Fixture()
+                    .Customize(new AutoMoqCustomization());
             }
 
             [TestCase(5, 5, Side.White)]
@@ -255,6 +256,23 @@ namespace Reversal.Tests
 
                 // Assert
                 Assert.That(result, Is.True);
+            }
+
+            [Test]
+            public void CanPlay_WhenPieceDoesNotEncloseOpponentPieces_ShouldReturnFalse()
+            {
+                // Arrange
+                var black = new Piece(new Position(4, 4), Side.Black);
+                fixture.Register<IEnumerable<Piece>>(() => new[] { black });
+
+                var piece = new Piece(new Position(5, 5), Side.White);
+                var subject = fixture.Create<Board>();
+
+                // Act
+                var result = subject.CanPlay(piece);
+
+                // Assert
+                Assert.That(result, Is.False);
             }
 
             [Test]

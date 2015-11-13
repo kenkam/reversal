@@ -96,46 +96,52 @@ namespace Reversal
                 this.direction = direction;
             }
 
-            public bool CapturesOpponentPieces() => GetContiguousOpponentPieces().Any();
+            public bool CapturesOpponentPieces() => GetEnclosedContiguousOpponentPieces().Any();
 
             public void FlipOpponents()
             {
-                foreach (var opponent in GetContiguousOpponentPieces())
+                foreach (var opponent in GetEnclosedContiguousOpponentPieces())
                 {
                     opponent.Flip();
                 }
             }
 
-            private IEnumerable<Piece> GetContiguousOpponentPieces()
+            private IEnumerable<Piece> GetEnclosedContiguousOpponentPieces()
             {
-                var side = piece.Side;
-                foreach (var next in GetContiguousPieces())
+                var opponentPieces = GetContiguousOpponentPieces()
+                    .ToArray();
+                if (!opponentPieces.Any())
                 {
-                    if (next.Side != side)
-                    {
-                        yield return next;
-                    }
-                    else
-                    {
-                        yield break;
-                    }
+                    return opponentPieces;
                 }
+
+                var nextPiece = GetNextPiece(opponentPieces.Last());
+                if (nextPiece == null || nextPiece.Side != piece.Side)
+                {
+                    return Enumerable.Empty<Piece>();
+                }
+
+                return opponentPieces;
             }
 
-            private IEnumerable<Piece> GetContiguousPieces()
+            private IEnumerable<Piece> GetContiguousOpponentPieces()
             {
-                var nextPosition = direction.AwayFrom(piece.Position);
-                while (!board.IsOutOfBounds(nextPosition))
+                var nextPiece = GetNextPiece(piece);
+                while (nextPiece != null)
                 {
-                    var nextPiece = board.GetPiece(nextPosition);
-                    if (nextPiece == null)
+                    if (nextPiece.Side == piece.Side)
                     {
                         yield break;
                     }
 
                     yield return nextPiece;
-                    nextPosition = direction.AwayFrom(nextPosition);
+                    nextPiece = GetNextPiece(nextPiece);
                 }
+            }
+
+            private Piece GetNextPiece(Piece thisPiece)
+            {
+                return board.GetPiece(direction.AwayFrom(thisPiece.Position));
             }
         }
     }
