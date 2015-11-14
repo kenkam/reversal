@@ -9,6 +9,6 @@ namespace Reversal
         IPiece GetPiece(Position position);
         void Play(IPiece piece);
         bool CanPlay(IPiece piece);
-        Side WinningSide { get; }
+        int Score(Side side);
     }
 }

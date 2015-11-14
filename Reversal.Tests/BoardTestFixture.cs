@@ -1,11 +1,10 @@
-﻿using NUnit.Framework;
+﻿using Moq;
+using NUnit.Framework;
 using Ploeh.AutoFixture;
 using Ploeh.AutoFixture.AutoMoq;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Moq;
 
 namespace Reversal.Tests
 {
@@ -284,9 +283,9 @@ namespace Reversal.Tests
                 Assert.That(result, Is.False);
             }
         }
-        
+
         [TestFixture]
-        public class WinningSideTestFixture
+        public class ScoreTestFixture
         {
             private IFixture fixture;
             private Mock<IPieceBag> pieceBagMock;
@@ -299,38 +298,24 @@ namespace Reversal.Tests
                 pieceBagMock = fixture.Freeze<Mock<IPieceBag>>();
             }
 
-            [TestCase(Side.White)]
-            [TestCase(Side.Black)]
-            public void WinningSide_WhenCalled_ShouldReturnSideWithMostPieces(Side side)
-            {
-                // Arrange
-                var piece = fixture.Build<FakePiece>()
-                    .With(x => x.Side, side)
-                    .Create();
-                pieceBagMock.Setup(x => x.GetEnumerator())
-                    .Returns(() => new List<IPiece> {piece}.GetEnumerator());
-
-                var subject = fixture.Create<Board>();
-
-                // Act
-                var result = subject.WinningSide;
-
-                // Assert
-                Assert.That(result, Is.EqualTo(side));
-            }
-
             [Test]
-            public void WinningSide_WhenBothSidesHaveSamePieces_ShouldReturnSideNone()
+            public void Score_WhenCalled_ShouldReturnNumberOfPieces()
             {
                 // Arrange
-                fixture.Register(() => Enumerable.Empty<IPiece>());
+                var side = fixture.Create<Side>();
+                var pieces = fixture.Build<FakePiece>()
+                    .With(x => x.Side, side)
+                    .CreateMany();
+                pieceBagMock.Setup(x => x.GetEnumerator())
+                    .Returns(() => pieces.GetEnumerator());
+
                 var subject = fixture.Create<Board>();
 
                 // Act
-                var result = subject.WinningSide;
+                var result = subject.Score(side);
 
                 // Assert
-                Assert.That(result, Is.EqualTo(Side.None));
+                Assert.That(result, Is.EqualTo(pieces.Count()));
             }
         }
 

@@ -49,27 +49,8 @@ namespace Reversal
             return CapturesOpponentPiecesInAnyDirection(piece);
         }
 
-        public Side WinningSide
-        {
-            get
-            {
-                var blacks = Score(Side.Black);
-                var whites = Score(Side.White);
-
-                if (blacks > whites)
-                {
-                    return Side.Black;
-                }
-                if (whites > blacks)
-                {
-                    return Side.White;
-                }
-                return Side.None;
-            }
-        }
-
-        private int Score(Side side) => GetPieces().Count(x => x.Side == side);
-
+        public int Score(Side side) => GetPieces().Count(x => x.Side == side);
+        
         private bool IsOccupied(Position position) => pieceBag.GetPiece(position) != null;
 
         private bool IsOutOfBounds(Position position)
